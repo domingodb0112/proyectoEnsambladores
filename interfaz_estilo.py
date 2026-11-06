@@ -10,9 +10,6 @@ COLOR = {
     "borde": "#e5e7eb",
     "texto": "#111827",
     "tenue": "#6b7280",
-    "barra": "#1e293b",
-    "barra_texto": "#f8fafc",
-    "barra_tenue": "#94a3b8",
     "acento": "#2563eb",
     "acento_hover": "#1d4ed8",
     "acento_suave": "#dbeafe",
@@ -54,7 +51,6 @@ def configurar_estilos(raiz: tk.Tk) -> None:
     estilo.configure("Superficie.TFrame", background=COLOR["superficie"])
     estilo.configure("Superficie.TLabel", background=COLOR["superficie"])
     estilo.configure("Tenue.TLabel", background=COLOR["superficie"], foreground=COLOR["tenue"])
-    estilo.configure("Titulo.TLabel", background=COLOR["superficie"], font=(FUENTE, 11, "bold"))
     estilo.configure("Superficie.TRadiobutton", background=COLOR["superficie"])
     estilo.map("Superficie.TRadiobutton", background=[("active", COLOR["superficie"])])
 
@@ -64,9 +60,6 @@ def configurar_estilos(raiz: tk.Tk) -> None:
     estilo.configure("Acento.TButton", background=COLOR["acento"], foreground="#ffffff",
                      font=(FUENTE, 10, "bold"))
     estilo.map("Acento.TButton", background=[("active", COLOR["acento_hover"])])
-    estilo.configure("Barra.TButton", background="#334155", foreground=COLOR["barra_texto"])
-    estilo.map("Barra.TButton", background=[("active", "#475569"), ("disabled", "#273449")],
-               foreground=[("disabled", COLOR["barra_tenue"])])
 
     estilo.configure("TNotebook", background=COLOR["fondo"], borderwidth=0, tabmargins=(0, 0, 0, 0))
     estilo.configure("TNotebook.Tab", padding=(18, 8), background=COLOR["fondo"],
@@ -102,6 +95,60 @@ def crear_tabla(padre: tk.Widget, columnas: list[tuple[str, str, int, bool]]) ->
     barra.pack(side="right", fill="y")
     tabla.tag_configure("zebra", background=COLOR["zebra"])
     return tabla
+
+
+def crear_par_tablas(padre: tk.Widget, columnas_izq: list[tuple[str, str, int, bool]],
+                     columnas_der: list[tuple[str, str, int, bool]]) -> tuple[ttk.Treeview, ttk.Treeview]:
+    """Dos tablas lado a lado para comparar fila por fila.
+
+    Comparten la barra de desplazamiento y la selección, así que una fila de la izquierda
+    queda siempre frente a la fila de la derecha con el mismo identificador.
+    """
+    marco = ttk.Frame(padre, style="Superficie.TFrame")
+    marco.pack(fill="both", expand=True)
+    marco.columnconfigure(0, weight=1, uniform="lados")
+    marco.columnconfigure(2, weight=1, uniform="lados")
+    marco.rowconfigure(0, weight=1)
+
+    tablas: list[ttk.Treeview] = []
+    for col, columnas in enumerate((columnas_izq, columnas_der)):
+        tabla = ttk.Treeview(marco, columns=[c[0] for c in columnas], show="headings", selectmode="browse")
+        for ident, texto, ancho, estira in columnas:
+            tabla.heading(ident, text=texto, anchor="w")
+            tabla.column(ident, width=ancho, minwidth=40, stretch=estira, anchor="w")
+        tabla.grid(row=0, column=col * 2, sticky="nsew")
+        tabla.tag_configure("zebra", background=COLOR["zebra"])
+        tablas.append(tabla)
+    tk.Frame(marco, bg=COLOR["borde"], width=2).grid(row=0, column=1, sticky="ns", padx=6)
+    barra = ttk.Scrollbar(marco, orient="vertical")
+    barra.grid(row=0, column=3, sticky="ns")
+    izquierda, derecha = tablas
+
+    def mover(*argumentos: str) -> None:
+        izquierda.yview(*argumentos)
+        derecha.yview(*argumentos)
+
+    def seguir(otra: ttk.Treeview):
+        def actualizar(primero: str, ultimo: str) -> None:
+            barra.set(primero, ultimo)
+            if abs(otra.yview()[0] - float(primero)) > 1e-9:      # rueda del ratón en una tabla
+                otra.yview_moveto(primero)
+        return actualizar
+
+    def copiar_seleccion(origen: ttk.Treeview, otra: ttk.Treeview):
+        def actualizar(_evento: tk.Event) -> None:
+            seleccion = origen.selection()
+            if seleccion and otra.selection() != seleccion:
+                otra.selection_set(seleccion)
+                otra.see(seleccion[0])
+        return actualizar
+
+    barra.configure(command=mover)
+    izquierda.configure(yscrollcommand=seguir(derecha))
+    derecha.configure(yscrollcommand=seguir(izquierda))
+    izquierda.bind("<<TreeviewSelect>>", copiar_seleccion(izquierda, derecha), add="+")
+    derecha.bind("<<TreeviewSelect>>", copiar_seleccion(derecha, izquierda), add="+")
+    return izquierda, derecha
 
 
 def tarjeta(padre: tk.Widget, titulo: str) -> tk.Label:

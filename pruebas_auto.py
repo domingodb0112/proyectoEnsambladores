@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 from analizador import Analizador
-from analisis import leer_lineas_fuente
+from analizador import leer_lineas_fuente
 
 MARCA = re.compile(r";\s*(OK|ERR)\b")
 AQUI = Path(__file__).resolve().parent

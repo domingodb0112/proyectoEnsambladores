@@ -2,9 +2,8 @@
 
 from configuracion import DIRECTIVAS, ER_INICIO_DUP, RANGO_PALABRA
 from constantes import leer_cantidad, leer_elemento, leer_numero, texto_rango
-from nombres import TODAS_INSTRUCCIONES, error_nombre
 from escaner import dividir_linea, fuera_de_comillas
-from tabla_simbolos import TablaSimbolos
+from tabla_simbolos import TODAS_INSTRUCCIONES, TablaSimbolos, error_nombre
 
 Resultado = tuple[bool, str]
 

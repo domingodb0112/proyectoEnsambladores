@@ -1,12 +1,15 @@
-"""Analizador del programa para las Fases 2 y 3: estructura de segmentos, dictamen por línea y símbolos."""
+"""Análisis completo de un archivo .ens: elementos léxicos, dictamen por línea, segmentos y símbolos."""
 
 import re
+from pathlib import Path
 
+from clasificador import clasificar_elemento
 from configuracion import ER_ENCABEZADO_SEGMENTO
-from escaner import quitar_comentarios, dividir_linea
-from tabla_simbolos import TablaSimbolos
+from escaner import dividir_linea, quitar_comentarios
 from sintaxis_codigo import analizar_codigo
 from sintaxis_datos import analizar_datos, analizar_pila
+from tabla_simbolos import TablaSimbolos
+
 
 NOMBRES_SEGMENTO = {"pila": "pila", "datos": "datos", "codigo": "código"}
 AYUDA_ENCABEZADO = "debe ser '.stack segment', '.data segment' o '.code segment'"
@@ -139,3 +142,48 @@ class Analizador:
     def completo(self) -> bool:
         """Verdadero cuando los tres segmentos existen exactamente una vez y están cerrados."""
         return all(len(s) == 1 and s[0]["fin"] for s in self.segmentos.values())
+
+
+class ElementoLexico:
+    """Un elemento separado en la Función 1."""
+
+    __slots__ = ("linea", "texto", "categoria")
+
+    def __init__(self, linea: int, texto: str, categoria: str) -> None:
+        self.linea, self.texto, self.categoria = linea, texto, categoria
+
+
+class Resultado:
+    """Todo lo que se muestra de un archivo analizado."""
+
+    def __init__(self, ruta: Path, lineas: list[str], elementos: list[ElementoLexico],
+                 analizador: Analizador) -> None:
+        self.ruta, self.lineas, self.elementos, self.analizador = ruta, lineas, elementos, analizador
+        self.correctas = sum(1 for fila in analizador.filas if fila[2] == "Correcta")
+        self.incorrectas = sum(1 for fila in analizador.filas if fila[2] == "Incorrecta")
+
+
+def leer_lineas_fuente(ruta: Path) -> list[str]:
+    """Lee un archivo fuente como UTF-8; si falla, como Windows-1252 o Latin-1."""
+    cruda = ruta.read_bytes()
+    for codificacion in ("utf-8-sig", "cp1252"):
+        try:
+            return cruda.decode(codificacion).splitlines()
+        except UnicodeDecodeError:
+            continue
+    return cruda.decode("latin-1").splitlines()
+
+
+def analizar_lexico(lineas: list[str]) -> list[ElementoLexico]:
+    """Función 1: separa e identifica los elementos de cada línea."""
+    return [ElementoLexico(numero, elemento, clasificar_elemento(elemento))
+            for numero, linea in enumerate(lineas, 1)
+            for elemento in dividir_linea(linea)]
+
+
+def analizar_archivo(ruta: Path) -> Resultado:
+    """Ejecuta las Funciones 1, 2 y 3 sobre un archivo .ens."""
+    lineas = leer_lineas_fuente(ruta)
+    analizador = Analizador(lineas)
+    analizador.ejecutar()
+    return Resultado(ruta, lineas, analizar_lexico(lineas), analizador)
