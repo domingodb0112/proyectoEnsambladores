@@ -1,0 +1,113 @@
+; ===========================================================================
+;  correcto_equipo3.ens - Programa SIN errores
+;  Todas las lineas con codigo deben salir "Correcta" (marca ;OK).
+;  Usa las 20 instrucciones con cada combinacion valida de operandos.
+; ===========================================================================
+.stack segment
+    dw   128  dup(0)                ;OK pila
+ends                                ;OK
+
+.data segment
+    msg     db "Hola mundo$"        ;OK cadena (11 bytes)
+    letra   db 'A'                  ;OK un caracter
+    n_dec   db 25                   ;OK decimal
+    n_hex   db 0FFh                 ;OK hexadecimal (255)
+    n_neg   db -5                   ;OK byte con signo
+    n_bin   db 10110011b            ;OK binario
+    vb1     db 7                    ;OK
+    vb2     db 3                    ;OK
+    vw1     dw 300                  ;OK
+    vw2     dw -2                   ;OK palabra con signo
+    w_hex   dw 0ABCDh               ;OK
+    w_bin   dw 1111000011110000b    ;OK
+    buf     db 10 dup('x')          ;OK dup con caracter
+    buf2    db 20 dup(0)            ;OK dup con numero
+    buf3    db 4 dup(-1)            ;OK dup con signo
+    tabla   dw 5 dup(1000)          ;OK
+    tabla2  dw 3 dup (-300)         ;OK espacio antes del parentesis
+    k_dec   equ 10                  ;OK constante
+    k_neg   equ -20                 ;OK constante con signo
+    k_hex   equ 0Ah                 ;OK constante hexadecimal
+ends                                ;OK
+
+.code segment
+inicio:                             ;OK etiqueta sola
+    cld                             ;OK sin operandos
+    cli                             ;OK
+    NOP                             ;OK mayusculas
+    popa                            ;OK
+    aad                             ;OK
+    aam                             ;OK
+
+    mul bl                          ;OK registro 8 bits
+    mul bx                          ;OK registro 16 bits
+    mul vb1                         ;OK memoria byte
+    mul vw1                         ;OK memoria palabra
+    mul byte ptr [bx]               ;OK indirecto con tamano
+    mul word ptr [bx+si+4]          ;OK base + indice + desplazamiento
+    mul vb1[bx]                     ;OK variable indexada
+
+    inc ax                          ;OK
+    INC Cl                          ;OK
+    inc vb1                         ;OK
+    inc vw1                         ;OK
+    inc byte ptr [di]               ;OK
+    inc word ptr [bp+2]             ;OK
+
+    idiv cl                         ;OK
+    idiv bx                         ;OK
+    idiv vb2                        ;OK
+    idiv vw2                        ;OK
+    idiv byte ptr [si]              ;OK
+    idiv word ptr [bx+di]           ;OK
+
+    sar ax, 1                       ;OK registro, 1
+    sar bl, cl                      ;OK registro, CL
+    sar ax, cl                      ;OK
+    sar vb1, 1                      ;OK memoria, 1
+    sar vw1, cl                     ;OK memoria, CL
+    sar byte ptr [bx], 1            ;OK
+    sar word ptr [bx], cl           ;OK
+    sar ax, 3                       ;OK inmediato de un byte
+    rcl ax, 1                       ;OK
+    rcl bl, cl                      ;OK
+    rcl vb1, 1                      ;OK
+    rcl vw1, cl                     ;OK
+    rcl word ptr [bx], 4            ;OK
+    rcl dx, k_dec                   ;OK constante equ como contador
+
+    test al, bl                     ;OK registro, registro
+    test ax, bx                     ;OK
+    test al, vb1                    ;OK registro, memoria
+    test ax, vw1                    ;OK
+    test vb1, bl                    ;OK memoria, registro
+    test vw1, ax                    ;OK
+    test al, 80h                    ;OK registro, inmediato
+    test ax, 1234h                  ;OK
+    test al, 'A'                    ;OK caracter como inmediato
+    test vb1, 4                     ;OK memoria, inmediato
+    test vw1, k_hex                 ;OK constante equ
+    test byte ptr [bx], 1           ;OK
+    test word ptr [bx], 1000h       ;OK
+    test [bx], al                   ;OK el registro fija el tamano
+
+    xchg ax, bx                     ;OK registro, registro
+    xchg al, bl                     ;OK
+    xchg al, vb1                    ;OK registro, memoria
+    xchg vw1, bx                    ;OK memoria, registro
+    xchg ax, word ptr [bx]          ;OK
+    xchg byte ptr [si], dl          ;OK
+    xchg bx, [si]                   ;OK
+
+    jb inicio                       ;OK saltos a etiqueta ya definida
+    je inicio                       ;OK
+    jnle inicio                     ;OK
+    jnp inicio                      ;OK
+    jp inicio                       ;OK
+    jcxz inicio                     ;OK
+    jz inicio                       ;OK
+otra: jz otra                       ;OK etiqueta e instruccion en la misma linea
+fin:                                ;OK
+    jz fin                          ;OK
+ends                                ;OK
+end inicio                          ;OK fin del programa

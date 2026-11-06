@@ -1,0 +1,168 @@
+; ===========================================================================
+;  errores_equipo3.ens - Catalogo de lineas CORRECTAS (;OK) e INCORRECTAS (;ERR)
+;  Cada marca indica el resultado esperado de esa linea.
+; ===========================================================================
+.stack segment
+.stacks segment                     ;ERR encabezado mal escrito
+    dw 128 dup(0)                   ;OK
+    dw 10 dup(-5)                   ;OK palabra con signo
+    dw 128 dupy(0)                  ;ERR dupy no es dup
+    db 5 dup(0)                     ;ERR la pila solo admite dw
+    dw 70000 dup(0)                 ;ERR cantidad mayor a 65535
+    dw -5 dup(0)                    ;ERR cantidad con signo
+    dw 10 dup(70000)                ;ERR valor no cabe en una palabra
+    dw 10 dup('a')                  ;ERR caracter en dw
+    dw 10 dup(?)                    ;ERR sin inicializar no admitido
+    dw 10 dup(0                     ;ERR falta cerrar parentesis
+    dw 10                           ;ERR falta dup
+    dw dup(0)                       ;ERR falta la cantidad
+    pila dw 10 dup(0)               ;ERR la pila no lleva simbolo
+    120 db dup('a')                 ;ERR no empieza con dw
+ends                                ;OK
+ends                                ;ERR ends sin segmento abierto
+
+.data segment
+    n3      db 255                  ;OK maximo sin signo
+    n4      db -128                 ;OK minimo con signo
+    n1      db 300                  ;ERR no cabe en un byte
+    n2      db -129                 ;ERR no cabe en un byte
+    w3      dw 65535                ;OK
+    w4      dw -32768               ;OK
+    w1      dw 65536                ;ERR no cabe en una palabra
+    w2      dw -32769               ;ERR no cabe en una palabra
+    h1      db FFh                  ;ERR hexadecimal sin 0 inicial
+    b1      db 102b                 ;ERR binario con un 2
+    d1      db 12ab                 ;ERR numero mal formado
+    c1      db 'A                   ;ERR comilla sin cerrar
+    s1      db "sin cerrar          ;ERR comilla sin cerrar
+    s2      db ''                   ;ERR cadena vacia
+    s3      db "ok$"                ;OK
+    x1      dw 'A'                  ;ERR dw solo admite numeros
+    l1      db 1,2,3                ;ERR listas no admitidas
+    q1      db ?                    ;ERR sin inicializar no admitido
+    q2      dw ?                    ;ERR sin inicializar no admitido
+    f1      db faltan comillas      ;ERR texto sin comillas
+    dd1     db 5 dup(0,1)           ;ERR dup con lista
+    dd2     db 5 dup('ab')          ;ERR dup con cadena
+    dd3     db 5 dup('a')           ;OK
+    dd4     db 3 dup(2 dup(0))      ;ERR dup anidado
+    dd5     dw 3 dup (7)            ;OK espacio antes del parentesis
+    dd6     db dup(0)               ;ERR falta la cantidad
+    dd7     db 5 dup()              ;ERR dup vacio
+    dd8     db 5 dup(300)           ;ERR valor no cabe en un byte
+    dd9     db 5 dup(0) 6           ;ERR sobran elementos
+    7dato   db 0                    ;ERR nombre inicia con digito
+    ax      db 0                    ;ERR nombre reservado (registro)
+    mov     db 0                    ;ERR nombre reservado (instruccion)
+    segment db 0                    ;ERR nombre reservado (pseudoinstruccion)
+    vb1     db 7                    ;OK
+    VB1     db 8                    ;ERR duplicado (mayusculas no distinguen)
+    vb2     db 3                    ;OK
+    vw1     dw 300                  ;OK
+    vw2     dw 5                    ;OK
+    k_dec   equ 10                  ;OK
+    k_neg   equ -20                 ;OK
+    k2      equ                     ;ERR equ sin valor
+    k3      equ 70000               ;ERR no cabe en una palabra
+    k4      equ 'A'                 ;ERR equ solo admite numeros
+    k5      equ 5 6                 ;ERR sobran elementos
+    equ 5                           ;ERR falta el nombre
+    x2      db                      ;ERR falta el valor
+    100                             ;ERR no es una definicion
+    pk      db 5 6                  ;ERR sobran elementos
+    sy      dd 5                    ;ERR dd no forma parte de la sintaxis
+    sz      xx 5                    ;ERR directiva desconocida
+    mov ax, 1                       ;ERR instruccion en el segmento de datos
+    lab:    db 1                    ;ERR dos puntos en datos
+ends                                ;OK
+
+.code segment
+data                                ;ERR encabezado mal escrito
+inicio:                             ;OK
+    cld ax                          ;ERR CLD no lleva operandos
+    cli 1                           ;ERR
+    nop al                          ;ERR
+    popa ax                         ;ERR
+    aad 10                          ;ERR AAD no lleva operandos
+    aam bx                          ;ERR
+    mul                             ;ERR falta operando
+    mul al, bl                      ;ERR dos operandos
+    mul 5                           ;ERR inmediato
+    mul [bx]                        ;ERR falta byte ptr o word ptr
+    mul ds                          ;ERR registro de segmento
+    mul k_dec                       ;ERR constante no es registro ni memoria
+    mul inicio                      ;ERR etiqueta
+    mul noexiste                    ;ERR simbolo no definido
+    mul [ax]                        ;ERR AX no es registro de direccion
+    mul [bx+bp]                     ;ERR dos bases
+    mul [si+di]                     ;ERR dos indices
+    mul [bx                         ;ERR falta cerrar corchete
+    mul []                          ;ERR corchetes vacios
+    mul [bx+]                       ;ERR falta operando tras el +
+    mul byte ptr                    ;ERR falta operando tras ptr
+    inc ax, 1                       ;ERR dos operandos
+    inc 5                           ;ERR inmediato
+    inc [bx]                        ;ERR tamano ambiguo
+    idiv al, cl                     ;ERR dos operandos
+    idiv 2                          ;ERR inmediato
+    idiv [bx]                       ;ERR tamano ambiguo
+    sar 5, 1                        ;ERR destino inmediato
+    sar ax, dl                      ;ERR contador solo CL
+    sar vb1, vb2                    ;ERR contador en memoria
+    sar vw1, cx                     ;ERR contador debe ser CL
+    sar ax                          ;ERR falta contador
+    sar ax bx                       ;ERR falta coma
+    sar ax, 256                     ;ERR contador fuera de rango
+    sar ax, -1                      ;ERR contador negativo
+    sar [bx], 1                     ;ERR tamano ambiguo
+    rcl 5, 1                        ;ERR destino inmediato
+    rcl ax, dl                      ;ERR contador solo CL
+    rcl vb1, vb2                    ;ERR contador en memoria
+    rcl ax                          ;ERR falta contador
+    test al, bx                     ;ERR tamanos distintos
+    test al, vw1                    ;ERR registro 8 con memoria 16
+    test vb1, bx                    ;ERR memoria 8 con registro 16
+    test vb1, vb2                   ;ERR memoria con memoria
+    test 5, al                      ;ERR destino inmediato
+    test al, 300                    ;ERR no cabe en 8 bits
+    test ax, 70000                  ;ERR no cabe en 16 bits
+    test [bx], 5                    ;ERR tamano ambiguo
+    test al                         ;ERR falta operando
+    test al,,bl                     ;ERR coma de mas
+    test al, bl, cl                 ;ERR tres operandos
+    xchg al, bx                     ;ERR tamanos distintos
+    xchg ax, 5                      ;ERR inmediato
+    xchg 5, ax                      ;ERR inmediato
+    xchg vb1, vb2                   ;ERR memoria con memoria
+    xchg ax                         ;ERR falta operando
+    xchg al, vw1                    ;ERR tamanos distintos
+    jb                              ;ERR falta etiqueta
+    je ax                           ;ERR registro, no etiqueta
+    jz 5                            ;ERR numero, no etiqueta
+    jp adelante                     ;ERR etiqueta definida despues
+    jcxz nunca                      ;ERR etiqueta no definida
+    jnle vb1                        ;ERR variable, no etiqueta
+    jz inicio:                      ;ERR dos puntos en el operando
+    jnp inicio, inicio              ;ERR dos operandos
+    jb inicio                       ;OK etiqueta ya definida
+    mov ax, 1                       ;ERR instruccion fuera de las 20
+    ret                             ;ERR instruccion fuera de las 20
+    int 21h                         ;ERR instruccion fuera de las 20
+    jmp inicio                      ;ERR instruccion fuera de las 20
+    add ax, bx                      ;ERR instruccion fuera de las 20
+    msg2 db 'x'                     ;ERR datos en el segmento de codigo
+    segment                         ;ERR pseudoinstruccion en codigo
+    foo                             ;ERR no es instruccion ni etiqueta
+    foo bar                         ;ERR no es instruccion
+inicio:                             ;ERR etiqueta duplicada
+ax:                                 ;ERR etiqueta con nombre reservado
+7et:                                ;ERR etiqueta inicia con digito
+vb1:                                ;ERR etiqueta igual a una variable
+a1: b1: nop                         ;ERR dos etiquetas
+:                                   ;ERR falta el nombre de la etiqueta
+adelante:                           ;OK
+    jp adelante                     ;OK
+end                                 ;ERR end dentro del segmento de codigo
+ends                                ;OK
+end inicio                          ;OK
+    nop                             ;ERR despues de end

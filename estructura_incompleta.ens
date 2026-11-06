@@ -1,0 +1,13 @@
+; ===========================================================================
+;  estructura_incompleta.ens - Problemas en la estructura de segmentos
+;  Se espera: pila sin 'ends', datos repetido y SIN segmento de codigo.
+; ===========================================================================
+nop                                 ;ERR linea fuera de un segmento
+.stack segment                      ;OK
+    dw 64 dup(0)                    ;OK
+.data segment                       ;ERR falta 'ends' de la pila (abre datos)
+    a db 1                          ;OK
+ends                                ;OK
+.data segment                       ;ERR segmento de datos repetido
+    b db 2                          ;OK
+ends                                ;OK

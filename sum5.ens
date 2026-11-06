@@ -1,0 +1,74 @@
+.model small
+.stack 100h
+
+.data
+    msg1 db 0dh, 0ah, 'Ingrese primer numero: $'
+    msg2 db 0dh, 0ah, 'Ingrese segundo numero: $'
+    msg3 db 0dh, 0ah, 'Ingrese tercer numero: $'
+    msg4 db 0dh, 0ah, 'Ingrese cuarto numero: $'
+    msg5 db 0dh, 0ah, 'Ingrese quinto numero: $'
+    msg_sum db 0dh, 0ah, 'La suma es: $'
+    msg_ptrs dw offset msg1, offset msg2, offset msg3, offset msg4, offset msg5
+    sum db 0
+    digit db 0
+
+.code
+main:
+    mov ax, @data
+    mov ds, ax
+
+    mov cx, 5
+    xor si, si
+
+read_loop:
+    ; Print prompt message
+    mov dx, [msg_ptrs + si]
+    mov ah, 09h
+    int 21h
+    add si, 2
+
+    ; Read numeric digit
+    mov ah, 01h
+    int 21h
+    sub al, '0'
+    mov digit, al
+
+wait_enter:
+    mov ah, 01h
+    int 21h
+    cmp al, 0dh
+    jne wait_enter
+
+    ; Accumulate confirmed digit
+    mov al, digit
+    add sum, al
+    loop read_loop
+
+    ; Print sum label
+    lea dx, msg_sum
+    mov ah, 09h
+    int 21h
+
+    ; Split sum into tens and units
+    mov al, sum
+    xor ah, ah
+    mov bl, 10
+    div bl
+    mov bx, ax
+
+    ; Print tens digit
+    mov ah, 02h
+    mov dl, bl
+    add dl, '0'
+    int 21h
+
+    ; Print units digit
+    mov dl, bh
+    add dl, '0'
+    int 21h
+
+    ; Terminate program
+    mov ax, 4c00h
+    int 21h
+
+end main
